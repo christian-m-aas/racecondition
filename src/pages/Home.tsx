@@ -22,7 +22,7 @@ export default function Home() {
     <>
       <section className="hero">
         <div className="hero-text">
-          <img className="hero-logo" src="/favicon.svg" alt="Race Condition logo" />
+          <img className="hero-logo" src="/logo.png" alt="Race Condition logo" />
           <h1 className="logo-text">Race <span>Condition</span></h1>
           <div className="row">
             <Link className="btn primary" to="/leaderboard">Leaderboard</Link>
