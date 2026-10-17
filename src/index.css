@@ -47,8 +47,8 @@ ul.plain { list-style: none; padding: 0; margin: 0; } ul.plain li { padding: 8px
 .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: 'Speedway', 'Barlow Condensed', sans-serif; font-size: 24px; font-style: normal; font-weight: 400; text-transform: uppercase; }
 .brand img { width: 36px; height: 36px; border-radius: 6px; }
-.brand { color: var(--yellow); }
-.brand b { color: #fff; margin-left: 4px; }
+.brand { color: var(--yellow); letter-spacing: .02em; }
+.brand b { color: #fff; font-weight: 400; }
 nav { display: flex; gap: 4px; overflow-x: auto; }
 nav a { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: 17px; padding: 8px 12px; border-bottom: 3px solid transparent; white-space: nowrap; }
 nav a.active { border-color: var(--accent); }
