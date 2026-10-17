@@ -21,7 +21,7 @@ export default function Layout() {
         <div className="container header-inner">
           <Link to="/" className="brand">
             <img src="/logo.png" alt="" />
-            <span>Race<b>Condition</b></span>
+            <span>Race <b>Condition</b></span>
           </Link>
           <nav>
             {NAV.map(([to, label]) => (
