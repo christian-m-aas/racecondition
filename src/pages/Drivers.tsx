@@ -64,7 +64,6 @@ export function DriverProfile() {
           ['Personal best', formatTime(s.bestMs)],
           ['Avg. race best', formatTime(s.avgOfBestMs ? Math.round(s.avgOfBestMs) : null)],
           ['Best finish', bestRank ? `P${bestRank}` : '–'],
-          ['Laps driven', s.laps],
           ['Crashes', s.crashes],
           ['DNFs', s.dnfs],
           ['Track records', s.records],
