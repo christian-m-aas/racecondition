@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, uploadImage } from '../lib/supabase'
 import { useData } from '../lib/DataContext'
-import { formatTime, parseTime } from '../lib/format'
+import { formatTime, isVideo, parseTime } from '../lib/format'
 import type { Heat } from '../lib/types'
 
 type Row = Record<string, unknown>
@@ -122,7 +122,7 @@ function Crud({ table, fields, rows, columns, defaults = {} }: {
               ) : f.type === 'image' ? (
                 <>
                   <input type="text" placeholder="URL or upload below" value={String(form[f.key] ?? '')} onChange={(e) => set(f.key, e.target.value)} required={f.required} />
-                  <input type="file" accept="image/*,.svg" onChange={(e) => void upload(f.key, e.target.files?.[0])} />
+                  <input type="file" accept={f.key === 'image_url' ? 'image/*,video/*,.mov' : 'image/*,.svg'} onChange={(e) => void upload(f.key, e.target.files?.[0])} />
                 </>
               ) : (
                 <input type={f.type} step={f.step} value={String(form[f.key] ?? '')} onChange={(e) => set(f.key, e.target.value)} required={f.required} />
@@ -264,6 +264,45 @@ function Results() {
   )
 }
 
+function PhotoOrder() {
+  const { data, reload } = useData()
+  const races = data.races.filter((r) => data.photos.some((p) => p.race_id === r.id))
+  const [raceId, setRaceId] = useState<number | ''>('')
+  const current = raceId || races[0]?.id
+  const list = data.photos.filter((p) => p.race_id === current)
+  if (!races.length) return null
+
+  async function move(i: number, dir: -1 | 1) {
+    const ids = list.map((p) => p.id)
+    const j = i + dir
+    if (j < 0 || j >= ids.length) return
+    ;[ids[i], ids[j]] = [ids[j], ids[i]]
+    await Promise.all(ids.map((id, n) => supabase.from('race_photos').update({ sort_order: n }).eq('id', id)))
+    await reload()
+  }
+
+  return (
+    <div className="card admin-form">
+      <h3>Order</h3>
+      <label>Race
+        <select value={current} onChange={(e) => setRaceId(Number(e.target.value))}>
+          {races.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+        </select>
+      </label>
+      <ul className="plain order-list">
+        {list.map((p, i) => (
+          <li key={p.id}>
+            {isVideo(p.image_url) ? <video src={p.image_url} preload="metadata" muted /> : <img src={p.image_url} alt="" />}
+            <span className="grow">{p.caption || <em className="muted">No caption</em>}</span>
+            <button className="btn small" disabled={i === 0} onClick={() => void move(i, -1)}>↑</button>
+            <button className="btn small" disabled={i === list.length - 1} onClick={() => void move(i, 1)}>↓</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 const TABS = ['Results', 'Races', 'Drivers', 'Tracks', 'Crashes', 'Gallery'] as const
 
 function Dashboard({ email }: { email: string | undefined }) {
@@ -326,12 +365,15 @@ function Dashboard({ email }: { email: string | undefined }) {
         </>
       )}
       {tab === 'Gallery' && (
+        <>
+        <PhotoOrder />
         <Crud table="race_photos" rows={data.photos} columns={(r) => [raceName(r.race_id), String(r.caption ?? '')]}
           fields={[
             { key: 'race_id', label: 'Race', type: 'select', options: raceOpts, required: true },
-            { key: 'image_url', label: 'Photo', type: 'image', required: true },
+            { key: 'image_url', label: 'Photo or video', type: 'image', required: true },
             { key: 'caption', label: 'Caption', type: 'text' },
           ]} />
+        </>
       )}
     </>
   )

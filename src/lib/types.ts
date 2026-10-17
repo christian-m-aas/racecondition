@@ -58,6 +58,7 @@ export interface Photo {
   race_id: number
   image_url: string
   caption: string | null
+  sort_order: number | null
 }
 
 export interface Data {

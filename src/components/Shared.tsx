@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { useData } from '../lib/DataContext'
 import { ACHIEVEMENTS } from '../lib/stats'
 import type { DriverStats, RaceInfo, RankRow } from '../lib/stats'
-import { formatDate, formatTime, MEDALS } from '../lib/format'
+import { formatDate, formatTime, isVideo, MEDALS } from '../lib/format'
 import type { Driver } from '../lib/types'
 
 export function Avatar({ driver, size = 44 }: { driver: Driver | undefined; size?: number }) {
@@ -100,4 +100,12 @@ export function Loading() {
   const { loading, error } = useData()
   if (error) return <p className="error">Could not load data: {error}</p>
   return loading ? <p className="muted">Loading…</p> : null
+}
+
+export function Media({ url, caption, onOpen }: { url: string; caption?: string | null; onOpen?: () => void }) {
+  return isVideo(url) ? (
+    <video src={url} controls playsInline preload="metadata" aria-label={caption ?? 'Video'} />
+  ) : (
+    <img src={url} alt={caption ?? ''} loading="lazy" onClick={onOpen} />
+  )
 }
