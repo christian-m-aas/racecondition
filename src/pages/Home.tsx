@@ -24,7 +24,7 @@ export default function Home() {
         <div className="hero-text">
           <img className="hero-logo" src="/favicon.svg" alt="Race Condition logo" />
           <div className="eyebrow">Online · Interest group</div>
-          <h1>Race <span>Condition</span></h1>
+          <h1 className="logo-text">Race <span>Condition</span></h1>
           <p>For those who know how to drive fast. Kart racing, lap times and bragging rights.</p>
           <div className="row">
             <Link className="btn primary" to="/leaderboard">Leaderboard</Link>

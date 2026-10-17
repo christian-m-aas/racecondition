@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700&family=Poppins:wght@400;500;600&display=swap');
 
+@font-face {
+  font-family: 'Speedway';
+  src: url('/fonts/Speeday-Regular-FFP.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg: #0b0f17;
   --panel: #131a26;
@@ -37,7 +45,7 @@ ul.plain { list-style: none; padding: 0; margin: 0; } ul.plain li { padding: 8px
 /* header */
 .site-header { background: rgba(11,15,23,.92); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 10; }
 .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; }
-.brand { display: flex; align-items: center; gap: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-style: italic; font-weight: 700; text-transform: uppercase; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: 'Speedway', 'Barlow Condensed', sans-serif; font-size: 24px; font-style: normal; font-weight: 400; text-transform: uppercase; }
 .brand img { width: 36px; height: 36px; border-radius: 6px; }
 .brand b { color: var(--red); margin-left: 4px; }
 nav { display: flex; gap: 4px; overflow-x: auto; }
@@ -51,6 +59,7 @@ nav a.active { border-color: var(--red); }
 /* hero */
 .hero { display: grid; grid-template-columns: 1.6fr 1fr; gap: 28px; align-items: stretch; padding: 24px 0 8px; }
 .hero-logo { width: 96px; height: 96px; border-radius: 16px; margin-bottom: 12px; }
+.hero h1.logo-text { font-family: 'Speedway', 'Barlow Condensed', sans-serif; font-style: normal; font-weight: 400; }
 .hero h1 span { color: var(--red); }
 .hero p { max-width: 520px; color: var(--muted); font-size: 17px; }
 .next-race { border-top: 4px solid var(--red); display: flex; flex-direction: column; gap: 4px; justify-content: center; }
