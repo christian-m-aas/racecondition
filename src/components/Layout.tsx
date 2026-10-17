@@ -20,7 +20,7 @@ export default function Layout() {
       <header className="site-header">
         <div className="container header-inner">
           <Link to="/" className="brand">
-            <img src="/favicon.svg" alt="" />
+            <img src="/logo.png" alt="" />
             <span>Race<b>Condition</b></span>
           </Link>
           <nav>
