@@ -34,10 +34,12 @@ export default function Leaderboard() {
         <>
           <SectionTitle
             action={
+              data.tracks.length > 1 && (
               <select value={trackId} onChange={(e) => setTrackId(e.target.value === 'all' ? 'all' : Number(e.target.value))}>
                 <option value="all">All tracks</option>
                 {data.tracks.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
+              )
             }
           >All-time fastest</SectionTitle>
           <p className="muted">Each driver’s best lap ever</p>

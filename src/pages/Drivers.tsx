@@ -50,7 +50,7 @@ export function DriverProfile() {
       <div className="profile-head">
         <Avatar driver={d} size={140} />
         <div>
-          <div className="eyebrow red">{d.is_active ? 'Active driver' : 'Retired'}</div>
+          <div className="eyebrow accent">{d.is_active ? 'Active driver' : 'Retired'}</div>
           <h1 className="page-title">{d.name}</h1>
           {d.nickname && <p className="muted">“{d.nickname}”</p>}
         </div>
@@ -64,7 +64,6 @@ export function DriverProfile() {
           ['Personal best', formatTime(s.bestMs)],
           ['Avg. race best', formatTime(s.avgOfBestMs ? Math.round(s.avgOfBestMs) : null)],
           ['Best finish', bestRank ? `P${bestRank}` : '–'],
-          ['Laps driven', s.laps],
           ['Crashes', s.crashes],
           ['DNFs', s.dnfs],
           ['Track records', s.records],

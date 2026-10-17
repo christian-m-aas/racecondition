@@ -31,7 +31,7 @@ export function RaceDetail() {
   return (
     <>
       <Link to="/races" className="muted">← All races</Link>
-      <div className="eyebrow red">{info.track?.name}</div>
+      <div className="eyebrow accent">{info.track?.name}</div>
       <h1 className="page-title">{info.race.name}</h1>
       <p className="muted">{formatDate(info.race.race_date)} · {info.driverCount} drivers</p>
       {info.race.description && <p>{info.race.description}</p>}
