@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, uploadImage } from '../lib/supabase'
@@ -57,7 +57,7 @@ function Login() {
 }
 
 /** Generic create / edit / delete for one table. */
-function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra }: {
+function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, groupBy }: {
   table: string
   fields: Field[]
   rows: object[]
@@ -65,6 +65,7 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra }: {
   defaults?: Row
   thumb?: (row: Row) => string | null
   extra?: (row: Row) => ReactNode
+  groupBy?: (row: Row) => string
 }) {
   const { reload } = useData()
   const [form, setForm] = useState<Row>(defaults)
@@ -140,8 +141,12 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra }: {
       </form>
       <table className="table">
         <tbody>
-          {(rows as Row[]).map((row) => (
-            <tr key={row.id as number}>
+          {(rows as Row[]).map((row, idx, all) => (
+            <Fragment key={row.id as number}>
+            {groupBy && (idx === 0 || groupBy(all[idx - 1]) !== groupBy(row)) && (
+              <tr className="group-row"><th colSpan={99}>{groupBy(row)}</th></tr>
+            )}
+            <tr>
               {thumb && <td className="thumb-cell">{thumb(row) ? (isVideo(thumb(row)!) ? <video src={thumb(row)!} preload="metadata" muted /> : <img src={thumb(row)!} alt="" />) : null}</td>}
               {columns(row).map((c, i) => <td key={i}>{c}</td>)}
               <td className="num nowrap">
@@ -150,6 +155,7 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra }: {
                 <button className="link danger" onClick={() => void remove(row.id as number)}>Delete</button>
               </td>
             </tr>
+            </Fragment>
           ))}
         </tbody>
       </table>
@@ -347,7 +353,7 @@ function Dashboard({ email }: { email: string | undefined }) {
         <p className="muted">Use the arrows to change the order within a race. New items are added at the end.</p>
         <Crud table="race_photos" rows={[...data.photos].sort((a, b) => a.race_id - b.race_id)} thumb={(r) => String(r.image_url)}
           extra={(r) => <><button className="btn small" onClick={() => void movePhoto(data.photos, r.id as number, -1, reload)}>↑</button> <button className="btn small" onClick={() => void movePhoto(data.photos, r.id as number, 1, reload)}>↓</button></>}
-          columns={(r) => [raceName(r.race_id), String(r.caption || "(no caption)")]}
+          groupBy={(r) => raceName(r.race_id)} columns={(r) => [String(r.caption || "")]}
           fields={[
             { key: 'race_id', label: 'Race', type: 'select', options: raceOpts, required: true },
             { key: 'image_url', label: 'Photo or video', type: 'image', required: true },
