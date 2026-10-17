@@ -34,6 +34,8 @@ export function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+export const isVideo = (url: string) => /\.(mov|mp4|m4v|webm)(\?|$)/i.test(url)
+
 export const MEDALS = ['🥇', '🥈', '🥉']
 
 export function ordinal(n: number): string {

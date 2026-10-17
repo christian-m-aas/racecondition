@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useData } from '../lib/DataContext'
 import { formatDate, formatTime } from '../lib/format'
-import { DriverLink, LeaderTable, Loading, RaceCard } from '../components/Shared'
+import { DriverLink, LeaderTable, Loading, Media, RaceCard } from '../components/Shared'
 
 export function Races() {
   const { analysis: a } = useData()
@@ -83,7 +83,7 @@ export function RaceDetail() {
           <h2>Photos</h2>
           <div className="gallery">
             {photos.map((p) => (
-              <figure key={p.id}><img src={p.image_url} alt={p.caption ?? ''} loading="lazy" />{p.caption && <figcaption>{p.caption}</figcaption>}</figure>
+              <figure key={p.id}><Media url={p.image_url} caption={p.caption} />{p.caption && <figcaption>{p.caption}</figcaption>}</figure>
             ))}
           </div>
         </section>

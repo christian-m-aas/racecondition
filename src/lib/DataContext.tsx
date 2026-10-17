@@ -31,7 +31,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       q('heats'),
       q('race_results'),
       q('crashes'),
-      q('race_photos').order('created_at', { ascending: false }),
+      q('race_photos'),
     ])
     const failed = [drivers, tracks, races, heats, results, crashes].find((r) => r.error)
     if (failed?.error) setError(failed.error.message)
@@ -44,7 +44,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       results: results.data ?? [],
       crashes: crashes.data ?? [],
       // The gallery table is optional until supabase/setup.sql has been run.
-      photos: photos.data ?? [],
+      photos: (photos.data ?? []).sort(
+        (a, b) => (a.sort_order ?? Infinity) - (b.sort_order ?? Infinity) || a.id - b.id,
+      ),
     })
     setLoading(false)
   }, [])
