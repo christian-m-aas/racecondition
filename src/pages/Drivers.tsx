@@ -50,7 +50,7 @@ export function DriverProfile() {
       <div className="profile-head">
         <Avatar driver={d} size={140} />
         <div>
-          <div className="eyebrow red">{d.is_active ? 'Active driver' : 'Retired'}</div>
+          <div className="eyebrow accent">{d.is_active ? 'Active driver' : 'Retired'}</div>
           <h1 className="page-title">{d.name}</h1>
           {d.nickname && <p className="muted">“{d.nickname}”</p>}
         </div>

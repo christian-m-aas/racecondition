@@ -32,7 +32,7 @@ export default function Home() {
           </div>
         </div>
         <aside className="card next-race">
-          <div className="eyebrow red">Next race</div>
+          <div className="eyebrow accent">Next race</div>
           {next ? (
             <>
               <h3>{next.name}</h3>
@@ -72,7 +72,7 @@ export default function Home() {
 
           {fact && (
             <aside className="card fact">
-              <div className="eyebrow red">{idx % 2 ? 'Random race fact' : 'Did you know?'}</div>
+              <div className="eyebrow accent">{idx % 2 ? 'Random race fact' : 'Did you know?'}</div>
               <p>{fact}</p>
               {facts.length > 1 && <button className="btn small" onClick={() => setIdx((i) => i + 1)}>Another fact ↻</button>}
             </aside>
