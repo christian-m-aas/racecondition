@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const NAV = [
   ['/', 'Home'],
@@ -12,6 +12,7 @@ const NAV = [
 
 export default function Layout() {
   const { pathname } = useLocation()
+  const [open, setOpen] = useState(false)
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
@@ -23,9 +24,17 @@ export default function Layout() {
             <img src="/logo.png" alt="" />
             <span>Race <b>Condition</b></span>
           </Link>
-          <nav>
+          <button
+            className="menu-btn"
+            aria-label="Menu"
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+          >
+            <span /><span /><span />
+          </button>
+          <nav className={open ? "open" : ""}>
             {NAV.map(([to, label]) => (
-              <NavLink key={to} to={to} end={to === '/'}>{label}</NavLink>
+              <NavLink key={to} to={to} end={to === '/'} onClick={() => setOpen(false)}>{label}</NavLink>
             ))}
           </nav>
         </div>
