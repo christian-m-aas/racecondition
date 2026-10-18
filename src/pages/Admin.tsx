@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase, uploadImage } from '../lib/supabase'
 import { useData } from '../lib/DataContext'
 import { formatTime, isVideo, parseTime } from '../lib/format'
+import { heatStanding } from '../lib/stats'
 import type { Heat, Photo } from '../lib/types'
 
 type Row = Record<string, unknown>
@@ -170,7 +171,7 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
   const { data, reload } = useData()
   const existing = data.results.filter((r) => r.heat_id === heat.id)
   const init = () => {
-    const lines: Line[] = existing.sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).map((r) => ({
+    const lines: Line[] = heatStanding(existing).map(({ result: r }) => r).map((r) => ({
       driver_id: String(r.driver_id), kart: r.kart_number?.toString() ?? '', best: r.best_lap_time_ms ? formatTime(r.best_lap_time_ms) : '',
       avg: r.average_lap_time_ms ? formatTime(r.average_lap_time_ms) : '', speed: r.average_speed?.toString() ?? '', dnf: r.dnf,
     }))
@@ -187,8 +188,8 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
     const parsed = filled.map((l) => ({ l, best: parseTime(l.best), avg: parseTime(l.avg) }))
     if (parsed.some((p) => p.l.best.trim() && p.best == null)) return setMsg('Invalid lap time – use e.g. 41.928 or 1:02.345')
     const order = [...parsed].sort((a, b) => Number(a.l.dnf || a.best == null) - Number(b.l.dnf || b.best == null) || (a.best ?? 0) - (b.best ?? 0))
-    const rows = order.map((p, i) => ({
-      race_id: raceId, heat_id: heat.id, driver_id: Number(p.l.driver_id), position: p.l.dnf ? null : i + 1,
+    const rows = order.map((p) => ({
+      race_id: raceId, heat_id: heat.id, driver_id: Number(p.l.driver_id),
       best_lap_time_ms: p.best, average_lap_time_ms: p.avg,
       average_speed: p.l.speed ? Number(p.l.speed.replace(',', '.')) : null, kart_number: p.l.kart ? Number(p.l.kart) : null, dnf: p.l.dnf,
     }))
@@ -198,7 +199,7 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
       const ins = await supabase.from('race_results').insert(rows)
       if (ins.error) return setMsg(ins.error.message)
     }
-    setMsg('Saved ✓ (positions calculated from best lap)')
+    setMsg('Saved ✓')
     await reload()
   }
 

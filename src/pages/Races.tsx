@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useData } from '../lib/DataContext'
 import { formatDate, formatTime } from '../lib/format'
+import { heatStanding } from '../lib/stats'
 import { DriverLink, LeaderTable, Loading, Media, RaceCard } from '../components/Shared'
 
 export function Races() {
@@ -40,16 +41,16 @@ export function RaceDetail() {
       <LeaderTable rows={info.ranking} />
 
       {heats.map((h) => {
-        const rows = results.filter((r) => r.heat_id === h.id).sort((x, y) => (x.position ?? 99) - (y.position ?? 99))
+        const rows = heatStanding(results.filter((r) => r.heat_id === h.id))
         return (
           <section key={h.id}>
             <h2>Heat {h.heat_number}{h.name ? ` – ${h.name}` : ''}</h2>
             <table className="table">
               <thead><tr><th>Pos</th><th>Driver</th><th className="num">Best</th><th className="num hide-sm">Average</th><th className="num hide-sm">Kart</th></tr></thead>
               <tbody>
-                {rows.map((r) => (
+                {rows.map(({ result: r, position }) => (
                   <tr key={r.id}>
-                    <td className="pos">{r.dnf ? 'DNF' : r.position}</td>
+                    <td className="pos">{r.dnf ? 'DNF' : position ?? '–'}</td>
                     <td><DriverLink driver={data.drivers.find((d) => d.id === r.driver_id)} size={32} /></td>
                     <td className="num mono">{formatTime(r.best_lap_time_ms)}</td>
                     <td className="num mono hide-sm">{formatTime(r.average_lap_time_ms)}</td>
