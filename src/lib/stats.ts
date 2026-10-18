@@ -5,7 +5,6 @@ export interface RankRow {
   driverId: number
   rank: number
   bestMs: number
-  avgMs: number | null
   heatId: number | null
   kart: number | null
 }
@@ -77,7 +76,6 @@ export function rankResults(results: Result[]): RankRow[] {
     driverId: r.driver_id,
     rank: i + 1,
     bestMs: r.best_lap_time_ms!,
-    avgMs: r.average_lap_time_ms,
     heatId: r.heat_id,
     kart: r.kart_number,
   }))

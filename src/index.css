@@ -96,7 +96,7 @@ label.check { grid-auto-flow: column; justify-content: start; align-items: cente
 .admin-form { display: grid; gap: 12px; margin: 16px 0; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .result-lines { display: grid; gap: 6px; overflow-x: auto; }
-.result-line { display: grid; grid-template-columns: minmax(150px, 2fr) 60px 1fr 1fr 80px 40px; gap: 6px; align-items: center; min-width: 580px; }
+.result-line { display: grid; grid-template-columns: minmax(150px, 2fr) 60px 1fr 80px 40px; gap: 6px; align-items: center; min-width: 500px; }
 .result-line.head { font-size: 12px; color: var(--muted); }
 .result-line input[type=checkbox] { width: 18px; }
 .nowrap { white-space: nowrap; }
