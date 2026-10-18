@@ -45,7 +45,7 @@ export function RaceDetail() {
           <section key={h.id}>
             <h2>Heat {h.heat_number}{h.name ? ` – ${h.name}` : ''}</h2>
             <table className="table">
-              <thead><tr><th>Pos</th><th>Driver</th><th className="num">Best</th><th className="num hide-sm">Average</th><th className="num hide-sm">Laps</th><th className="num hide-sm">Kart</th></tr></thead>
+              <thead><tr><th>Pos</th><th>Driver</th><th className="num">Best</th><th className="num hide-sm">Average</th><th className="num hide-sm">Kart</th></tr></thead>
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id}>
@@ -53,7 +53,6 @@ export function RaceDetail() {
                     <td><DriverLink driver={data.drivers.find((d) => d.id === r.driver_id)} size={32} /></td>
                     <td className="num mono">{formatTime(r.best_lap_time_ms)}</td>
                     <td className="num mono hide-sm">{formatTime(r.average_lap_time_ms)}</td>
-                    <td className="num hide-sm">{r.laps_completed ?? '–'}</td>
                     <td className="num hide-sm">{r.kart_number ?? '–'}</td>
                   </tr>
                 ))}
