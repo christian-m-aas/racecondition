@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useData } from '../lib/DataContext'
 import { rankResults } from '../lib/stats'
-import { formatDate } from '../lib/format'
 import { LeaderTable, Loading, SectionTitle } from '../components/Shared'
 
 export default function Leaderboard() {
@@ -26,7 +25,6 @@ export default function Leaderboard() {
         a.lastRace ? (
           <>
             <SectionTitle>{a.lastRace.race.name}</SectionTitle>
-            <p className="muted">{a.lastRace.track?.name} · {formatDate(a.lastRace.race.race_date)} · each driver’s best lap across all heats</p>
             <LeaderTable rows={a.lastRace.ranking} />
           </>
         ) : <p className="muted">No races yet.</p>
@@ -42,7 +40,6 @@ export default function Leaderboard() {
               )
             }
           >All-time fastest</SectionTitle>
-          <p className="muted">Each driver’s best lap ever</p>
           <LeaderTable rows={allRows} />
         </>
       )}
