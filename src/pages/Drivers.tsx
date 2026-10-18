@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useData } from '../lib/DataContext'
 import { formatDate, formatTime, MEDALS } from '../lib/format'
@@ -5,14 +6,30 @@ import { Achievements, Avatar, Loading } from '../components/Shared'
 
 export function Drivers() {
   const { data, analysis: a } = useData()
-  const sorted = [...data.drivers].sort((x, y) => {
+  const [query, setQuery] = useState('')
+  const normalise = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const q = normalise(query.trim())
+  const sorted = [...data.drivers]
+    .filter((d) => !q || normalise(`${d.name} ${d.nickname ?? ''}`).includes(q))
+    .sort((x, y) => {
     const sx = a.driverStats.get(x.id)!, sy = a.driverStats.get(y.id)!
     return (sy.wins - sx.wins) || (sy.podiums - sx.podiums) || (sy.races - sx.races) || x.name.localeCompare(y.name)
   })
   return (
     <>
       <h1 className="page-title">Drivers</h1>
+      <div className="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+        <input
+          type="search"
+          placeholder="Search drivers…"
+          aria-label="Search drivers"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
       <Loading />
+      {q && !sorted.length && <p className="muted">No drivers match “{query}”.</p>}
       <div className="grid four">
         {sorted.map((d) => {
           const s = a.driverStats.get(d.id)!
