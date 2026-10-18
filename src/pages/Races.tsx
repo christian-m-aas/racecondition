@@ -69,7 +69,6 @@ export function RaceDetail() {
             {crashes.map((c) => (
               <li key={c.id}>
                 <strong>{data.drivers.find((d) => d.id === c.driver_id)?.name}</strong>
-                {c.lap_number ? ` · lap ${c.lap_number}` : ''}{c.turn_name ? ` · ${c.turn_name}` : ''}
                 {c.description ? ` – ${c.description}` : ''}
               </li>
             ))}

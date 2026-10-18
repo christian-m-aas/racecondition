@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useData } from '../lib/DataContext'
 import { formatTime } from '../lib/format'
-import { Loading } from '../components/Shared'
+import { CrashPin, Loading } from '../components/Shared'
 
 export default function Track() {
   const { data, analysis: a } = useData()
@@ -29,9 +29,9 @@ export default function Track() {
             {track.svg_url ? (
               <div className="map-wrap">
                 <img src={track.svg_url} alt={`Map of ${track.name}`} />
-                {/* Crash markers use x/y as percentages (0–100) of the map. */}
+                {/* Crash pins use x/y as percentages (0–100) of the map. */}
                 {crashes.map((c) => (
-                  <button key={c.id} className={`marker ${c.id === crashId ? 'active' : ''}`} style={{ left: `${c.x}%`, top: `${c.y}%` }} onClick={() => setCrashId(c.id)} aria-label="Crash">💥</button>
+                  <CrashPin key={c.id} driver={data.drivers.find((d) => d.id === c.driver_id)} x={c.x} y={c.y} active={c.id === crashId} onClick={() => setCrashId(c.id)} />
                 ))}
               </div>
             ) : (
@@ -46,13 +46,13 @@ export default function Track() {
             {selected && (
               <div className="card">
                 <strong>{data.drivers.find((d) => d.id === selected.driver_id)?.name}</strong>
-                <div className="muted">{data.races.find((r) => r.id === selected.race_id)?.name}{selected.turn_name ? ` · ${selected.turn_name}` : ''}{selected.lap_number ? ` · lap ${selected.lap_number}` : ''}</div>
+                <div className="muted">{data.races.find((r) => r.id === selected.race_id)?.name}</div>
                 {selected.description && <p>{selected.description}</p>}
               </div>
             )}
             <ul className="plain">
               {crashes.map((c) => (
-                <li key={c.id}><button className="link" onClick={() => setCrashId(c.id)}>{data.drivers.find((d) => d.id === c.driver_id)?.name}{c.turn_name ? ` – ${c.turn_name}` : ''}</button></li>
+                <li key={c.id}><button className="link" onClick={() => setCrashId(c.id)}>{data.drivers.find((d) => d.id === c.driver_id)?.name}</button></li>
               ))}
             </ul>
           </div>

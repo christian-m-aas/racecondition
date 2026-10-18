@@ -1,8 +1,9 @@
 import { Fragment, useEffect, useState } from 'react'
-import type { FormEvent, ReactNode } from 'react'
+import type { FormEvent, MouseEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, uploadImage } from '../lib/supabase'
 import { useData } from '../lib/DataContext'
+import { Avatar, CrashPin } from '../components/Shared'
 import { formatTime, isVideo, parseTime } from '../lib/format'
 import { heatStanding } from '../lib/stats'
 import type { Heat, Photo } from '../lib/types'
@@ -286,6 +287,107 @@ async function movePhoto(photos: Photo[], id: number, dir: -1 | 1, reload: () =>
   await reload()
 }
 
+function CrashEditor() {
+  const { data, reload } = useData()
+  const races = [...data.races].sort((a, b) => (a.race_date < b.race_date ? 1 : -1))
+  const [raceId, setRaceId] = useState<number | ''>('')
+  const [driverId, setDriverId] = useState<number | ''>('')
+  const [point, setPoint] = useState<{ x: number; y: number } | null>(null)
+  const [description, setDescription] = useState('')
+  const [editing, setEditing] = useState<number | null>(null)
+  const [msg, setMsg] = useState('')
+
+  const current = raceId || races[0]?.id
+  const race = data.races.find((r) => r.id === current)
+  const track = data.tracks.find((t) => t.id === race?.track_id)
+  const crashes = data.crashes.filter((c) => c.race_id === current)
+  const driver = data.drivers.find((d) => d.id === driverId)
+
+  const reset = () => { setDriverId(''); setPoint(null); setDescription(''); setEditing(null) }
+
+  function place(e: MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const pct = (v: number, size: number) => Math.min(100, Math.max(0, Math.round((v / size) * 1000) / 10))
+    setPoint({ x: pct(e.clientX - rect.left, rect.width), y: pct(e.clientY - rect.top, rect.height) })
+  }
+
+  async function save() {
+    if (!driverId) return setMsg('Choose a driver first')
+    if (!point) return setMsg('Click on the map to place the crash')
+    const payload = { race_id: current, driver_id: driverId, x: point.x, y: point.y, description: description.trim() || null }
+    const { error } = editing == null
+      ? await supabase.from('crashes').insert(payload)
+      : await supabase.from('crashes').update(payload).eq('id', editing)
+    if (error) return setMsg(error.message)
+    setMsg('Saved ✓')
+    reset()
+    await reload()
+  }
+
+  async function remove(id: number) {
+    if (!confirm('Delete this crash?')) return
+    const { error } = await supabase.from('crashes').delete().eq('id', id)
+    if (error) return setMsg(error.message)
+    if (editing === id) reset()
+    await reload()
+  }
+
+  if (!races.length) return <p className="muted">Create a race first.</p>
+  return (
+    <div>
+      <label>Race
+        <select value={current} onChange={(e) => { setRaceId(Number(e.target.value)); reset() }}>
+          {races.map((r) => <option key={r.id} value={r.id}>{r.name} ({r.race_date})</option>)}
+        </select>
+      </label>
+      {!track?.svg_url ? (
+        <p className="muted">There is no map for {track?.name ?? 'this track'} yet. Add an SVG under the Tracks tab first.</p>
+      ) : (
+        <div className="card admin-form">
+          <h3>{editing == null ? 'Add crash' : 'Editing crash'}</h3>
+          <div className="form-grid">
+            <label>Driver
+              <select value={driverId} onChange={(e) => setDriverId(e.target.value ? Number(e.target.value) : '')}>
+                <option value="">–</option>
+                {data.drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </label>
+            <label>Description (optional)
+              <input value={description} onChange={(e) => setDescription(e.target.value)} />
+            </label>
+          </div>
+          <p className="muted">{driverId ? 'Click on the map where the crash happened.' : 'Choose a driver, then click on the map.'}</p>
+          <div className="map-wrap pick" onClick={place}>
+            <img src={track.svg_url} alt={`Map of ${track.name}`} draggable={false} />
+            {crashes.filter((c) => c.id !== editing).map((c) => (
+              <CrashPin key={c.id} driver={data.drivers.find((d) => d.id === c.driver_id)} x={c.x} y={c.y} dim />
+            ))}
+            {point && <CrashPin driver={driver} x={point.x} y={point.y} active />}
+          </div>
+          <div className="row">
+            <button className="btn primary" onClick={() => void save()}>{editing == null ? 'Add crash' : 'Save'}</button>
+            {(editing != null || point || driverId) && <button className="btn" onClick={reset}>Cancel</button>}
+            <span className="muted">{msg}</span>
+          </div>
+        </div>
+      )}
+      <ul className="plain">
+        {crashes.map((c) => {
+          const d = data.drivers.find((x) => x.id === c.driver_id)
+          return (
+            <li key={c.id} className="crash-row">
+              <Avatar driver={d} size={32} />
+              <span className="grow">{d?.name}{c.description ? <span className="muted"> – {c.description}</span> : null}</span>
+              <button className="link" onClick={() => { setEditing(c.id); setDriverId(c.driver_id); setPoint({ x: c.x, y: c.y }); setDescription(c.description ?? ''); window.scrollTo(0, 0) }}>Edit</button>{' · '}
+              <button className="link danger" onClick={() => void remove(c.id)}>Delete</button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 const TABS = ['Results', 'Races', 'Drivers', 'Tracks', 'Crashes', 'Gallery'] as const
 
 function Dashboard({ email }: { email: string | undefined }) {
@@ -293,8 +395,6 @@ function Dashboard({ email }: { email: string | undefined }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>('Results')
   const trackOpts = data.tracks.map((t) => ({ value: t.id, label: t.name }))
   const raceOpts = data.races.map((r) => ({ value: r.id, label: r.name }))
-  const driverOpts = data.drivers.map((d) => ({ value: d.id, label: d.name }))
-  const driverName = (id: unknown) => data.drivers.find((d) => d.id === id)?.name ?? '?'
   const raceName = (id: unknown) => data.races.find((r) => r.id === id)?.name ?? '?'
 
   return (
@@ -332,21 +432,7 @@ function Dashboard({ email }: { email: string | undefined }) {
             { key: 'svg_url', label: 'Track map (SVG)', type: 'image' },
           ]} />
       )}
-      {tab === 'Crashes' && (
-        <>
-          <p className="muted">x / y are percentages (0–100) of the track map, measured from the top-left corner.</p>
-          <Crud table="crashes" rows={data.crashes} columns={(r) => [raceName(r.race_id), driverName(r.driver_id), String(r.turn_name ?? ''), r.lap_number ? `Lap ${r.lap_number}` : '']}
-            fields={[
-              { key: 'race_id', label: 'Race', type: 'select', options: raceOpts, required: true },
-              { key: 'driver_id', label: 'Driver', type: 'select', options: driverOpts, required: true },
-              { key: 'lap_number', label: 'Lap', type: 'number' },
-              { key: 'turn_name', label: 'Turn', type: 'text' },
-              { key: 'x', label: 'x (%)', type: 'number', step: 'any', required: true },
-              { key: 'y', label: 'y (%)', type: 'number', step: 'any', required: true },
-              { key: 'description', label: 'Description', type: 'textarea' },
-            ]} />
-        </>
-      )}
+      {tab === 'Crashes' && <CrashEditor />}
       {tab === 'Gallery' && (
         <>
         <p className="muted">Use the arrows to change the order within a race. New items are added at the end.</p>

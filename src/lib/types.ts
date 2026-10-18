@@ -43,10 +43,8 @@ export interface Crash {
   id: number
   race_id: number
   driver_id: number
-  lap_number: number | null
   x: number
   y: number
-  turn_name: string | null
   description: string | null
 }
 

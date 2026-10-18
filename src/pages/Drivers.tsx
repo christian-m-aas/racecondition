@@ -114,7 +114,7 @@ export function DriverProfile() {
           <h2>Crashes 💥</h2>
           <ul className="plain">
             {crashes.map((c) => (
-              <li key={c.id}>{data.races.find((r) => r.id === c.race_id)?.name}{c.turn_name ? ` · ${c.turn_name}` : ''}{c.lap_number ? ` · lap ${c.lap_number}` : ''}{c.description ? ` – ${c.description}` : ''}</li>
+              <li key={c.id}>{data.races.find((r) => r.id === c.race_id)?.name}{c.description ? ` – ${c.description}` : ''}</li>
             ))}
           </ul>
         </>
