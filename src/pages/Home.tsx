@@ -21,19 +21,13 @@ export default function Home() {
   return (
     <>
       <section className="hero">
-        <div className="hero-text">
-          <img className="hero-logo" src="/logo.png" alt="Race Condition logo" />
-          <h1 className="logo-text">Race <span>Condition</span></h1>
-          <div className="row">
-            <Link className="btn primary" to="/leaderboard">Leaderboard</Link>
-            <Link className="btn" to="/races">Past races</Link>
-          </div>
-        </div>
-        <aside className="card next-race">
+        <img className="hero-logo" src="/logo.png" alt="Race Condition logo" />
+        <h1 className="sr-only">Race Condition</h1>
+        <div className="hero-side">
           <div className="eyebrow accent">Next race</div>
           {next ? (
             <>
-              <h3>{next.name}</h3>
+              <h2 className="next-name">{next.name}</h2>
               <div className="countdown">{days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days`}</div>
               <div className="muted">{formatDate(next.race_date)}</div>
               <div>{next.track?.name}{next.track?.location ? ` · ${next.track.location}` : ''}</div>
@@ -42,7 +36,11 @@ export default function Home() {
           ) : (
             <p className="muted">No race scheduled yet. Stay tuned!</p>
           )}
-        </aside>
+          <div className="row">
+            <Link className="btn primary" to="/leaderboard">Leaderboard</Link>
+            <Link className="btn" to="/races">Past races</Link>
+          </div>
+        </div>
       </section>
 
       <Loading />
