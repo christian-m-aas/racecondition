@@ -34,7 +34,6 @@ export interface Result {
   driver_id: number
   heat_id: number | null
   best_lap_time_ms: number | null
-  average_lap_time_ms: number | null
   dnf: boolean
   average_speed: number | null
   kart_number: number | null
