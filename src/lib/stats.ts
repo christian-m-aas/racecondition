@@ -33,7 +33,6 @@ export interface DriverStats {
   podiums: number
   crashes: number
   dnfs: number
-  laps: number
   bestMs: number | null
   avgOfBestMs: number | null
   history: { race: Race; rank: number | null; bestMs: number | null }[]
@@ -167,7 +166,6 @@ export function analyse(data: Data): Analysis {
       podiums: history.filter((h) => h.rank != null && h.rank <= 3).length,
       crashes: data.crashes.filter((c) => c.driver_id === driver.id).length,
       dnfs: mine.filter((r) => r.dnf).length,
-      laps: mine.reduce((sum, r) => sum + (r.laps_completed ?? 0), 0),
       bestMs: valid.length ? Math.min(...valid.map((r) => r.best_lap_time_ms!)) : null,
       avgOfBestMs: raceBests.length ? raceBests.reduce((a, b) => a + b, 0) / raceBests.length : null,
       history,
@@ -211,8 +209,6 @@ export function generateFacts(data: Data, a: Analysis): string[] {
   if (crashes) facts.push(`${crashes.driver.name} has crashed ${crashes.crashes} times – the most on the grid.`)
   const iron = top((s) => s.races)
   if (iron) facts.push(`${iron.driver.name} has taken part in ${iron.races} races, more than anyone else.`)
-  const laps = top((s) => s.laps)
-  if (laps) facts.push(`${laps.driver.name} has driven ${laps.laps} laps in total.`)
 
   // Longest run of consecutive race wins.
   let run = 0
