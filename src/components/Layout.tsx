@@ -21,7 +21,7 @@ export default function Layout() {
       <header className="site-header">
         <div className="container header-inner">
           <Link to="/" className="brand">
-            <img src="/logo.png" alt="" />
+            <img src="/favicon.png" alt="" />
             <span>Race <b>Condition</b></span>
           </Link>
           <button
