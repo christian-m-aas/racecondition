@@ -109,3 +109,26 @@ export function Media({ url, caption, onOpen }: { url: string; caption?: string 
     <img src={url} alt={caption ?? ''} loading="lazy" onClick={onOpen} />
   )
 }
+
+/** A crash marker on the track map: the driver's profile picture at x/y (percent of the map). */
+export function CrashPin({ driver, x, y, active, dim, onClick }: {
+  driver: Driver | undefined
+  x: number
+  y: number
+  active?: boolean
+  dim?: boolean
+  onClick?: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className={`pin ${active ? 'active' : ''} ${dim ? 'dim' : ''} ${onClick ? '' : 'static'}`}
+      style={{ left: `${x}%`, top: `${y}%` }}
+      onClick={onClick}
+      aria-label={`Crash: ${driver?.name ?? 'unknown driver'}`}
+    >
+      <Avatar driver={driver} size={34} />
+      <span className="pin-badge">💥</span>
+    </button>
+  )
+}

@@ -140,7 +140,6 @@ label.check { grid-auto-flow: column; justify-content: start; align-items: cente
 .trackmap { min-height: 320px; display: grid; place-items: center; }
 .map-wrap { position: relative; width: 100%; } .map-wrap img { width: 100%; display: block; }
 .map-placeholder { color: var(--muted); font: italic 700 28px 'Barlow Condensed', sans-serif; text-transform: uppercase; }
-.marker { position: absolute; transform: translate(-50%, -50%); background: none; border: 0; font-size: 22px; cursor: pointer; } .marker.active { filter: drop-shadow(0 0 8px var(--accent)); font-size: 30px; }
 
 .order-list li { display: flex; align-items: center; gap: 10px; }
 .order-list img, .order-list video { width: 64px; height: 48px; object-fit: cover; border-radius: 4px; background: #000; }
@@ -186,3 +185,13 @@ label.check { grid-auto-flow: column; justify-content: start; align-items: cente
 .search input::placeholder { color: var(--muted); }
 .search input:focus { outline: none; border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(249,183,89,.2); }
 .search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+/* crash pins */
+.map-wrap.pick { cursor: crosshair; user-select: none; }
+.pin { position: absolute; transform: translate(-50%, -50%); background: none; border: 0; padding: 0; line-height: 0; cursor: pointer; }
+.pin.static { pointer-events: none; }
+.pin.dim { opacity: .55; }
+.pin .avatar { border: 2px solid var(--yellow); background: #000; box-shadow: 0 2px 8px rgba(0,0,0,.6); }
+.pin-badge { position: absolute; right: -8px; bottom: -8px; font-size: 14px; line-height: 1; }
+.pin.active { z-index: 2; } .pin.active .avatar { border-color: #fff; box-shadow: 0 0 0 3px var(--yellow), 0 2px 10px rgba(0,0,0,.7); }
+.crash-row { display: flex; align-items: center; gap: 10px; }
