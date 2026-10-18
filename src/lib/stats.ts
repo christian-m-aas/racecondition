@@ -244,3 +244,12 @@ export function generateFacts(data: Data, a: Analysis): string[] {
   void data
   return facts
 }
+
+/** Orders one heat's results by best lap (DNF / no time last) and derives the positions. */
+export function heatStanding(results: Result[]): { result: Result; position: number | null }[] {
+  const timed = (r: Result) => !r.dnf && r.best_lap_time_ms != null
+  const sorted = [...results].sort(
+    (a, b) => Number(!timed(a)) - Number(!timed(b)) || (a.best_lap_time_ms ?? 0) - (b.best_lap_time_ms ?? 0),
+  )
+  return sorted.map((result, i) => ({ result, position: timed(result) ? i + 1 : null }))
+}

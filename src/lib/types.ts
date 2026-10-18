@@ -33,7 +33,6 @@ export interface Result {
   race_id: number
   driver_id: number
   heat_id: number | null
-  position: number | null
   best_lap_time_ms: number | null
   average_lap_time_ms: number | null
   dnf: boolean
