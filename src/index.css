@@ -58,15 +58,13 @@ nav a.active { border-color: var(--accent); }
 .menu-btn { display: none; }
 
 /* hero */
-.hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: center; padding: 16px 0 8px; }
-.hero-logo { width: clamp(260px, 34vw, 460px); height: auto; display: block; }
-.hero-text .row { margin-top: 20px; }
-.next-race { border-top: 4px solid var(--accent); display: flex; flex-direction: column; gap: 2px; padding: 22px 24px; max-width: 420px; justify-self: end; width: 100%; }
-.next-race h3 { margin: 4px 0 0; }
-.next-race p { margin: 8px 0 0; }
+.hero { display: flex; align-items: center; justify-content: center; gap: 56px; padding: 28px 0 12px; }
+.hero-logo { width: clamp(200px, 24vw, 280px); height: auto; display: block; flex: none; }
+.hero-side { border-left: 4px solid var(--accent); padding: 4px 0 4px 36px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hero-side .next-name { margin: 2px 0 0; font-size: 34px; }
+.hero-side p { margin: 8px 0 0; max-width: 420px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.countdown { font-family: 'Barlow Condensed', sans-serif; font-size: 44px; margin: 6px 0 2px; font-weight: 700; font-style: italic; text-transform: uppercase; line-height: 1; }
-@media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .next-race { justify-self: start; } }
+.countdown { font-family: 'Barlow Condensed', sans-serif; font-size: 60px; margin: 6px 0 2px; font-weight: 700; font-style: italic; text-transform: uppercase; line-height: 1; }
 
 /* cards & grids */
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
@@ -170,11 +168,11 @@ label.check { grid-auto-flow: column; justify-content: start; align-items: cente
   .section-title { flex-wrap: wrap; }
   .table th, .table td { padding: 8px 6px; }
   .table { font-size: 14px; }
-  .hero { gap: 24px; padding-top: 8px; }
-  .hero-text { text-align: center; }
-  .hero-logo { width: min(300px, 78vw); margin-inline: auto; }
-  .hero-text .row { justify-content: center; }
-  .next-race { justify-self: stretch; max-width: none; }
+  .hero { flex-direction: column; gap: 20px; padding-top: 8px; text-align: center; }
+  .hero-logo { width: min(240px, 66vw); }
+  .hero-side { border-left: 0; padding: 0; align-items: center; }
+  .hero-side .next-name { font-size: 28px; }
+  .countdown { font-size: 48px; }
   .record-time { font-size: 52px; }
   .fact p { font-size: 17px; }
   .profile-head { gap: 16px; }
