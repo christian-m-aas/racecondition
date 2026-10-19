@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const NAV = [
   ['/', 'Home'],
@@ -13,24 +13,6 @@ const NAV = [
 export default function Layout() {
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
-  const bar = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const update = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight
-      const pct = max > 0 ? Math.min(1, window.scrollY / max) : 0
-      if (bar.current) bar.current.style.transform = `scaleX(${pct})`
-    }
-    update()
-    window.addEventListener('scroll', update, { passive: true })
-    window.addEventListener('resize', update)
-    const ro = new ResizeObserver(update)
-    ro.observe(document.body)
-    return () => {
-      window.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
-      ro.disconnect()
-    }
-  }, [])
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
@@ -56,7 +38,6 @@ export default function Layout() {
             ))}
           </nav>
         </div>
-        <div className="stripe"><div className="stripe-fill" ref={bar} /></div>
       </header>
       <main className="container"><Outlet /></main>
       <footer className="site-footer">
