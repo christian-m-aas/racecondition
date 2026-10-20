@@ -165,8 +165,8 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, group
   )
 }
 
-interface Line { driver_id: string; kart: string; best: string; speed: string; dnf: boolean }
-const blank = (): Line => ({ driver_id: '', kart: '', best: '', speed: '', dnf: false })
+interface Line { driver_id: string; kart: string; best: string; speed: string; topSpeed: string; dnf: boolean }
+const blank = (): Line => ({ driver_id: '', kart: '', best: '', speed: '', topSpeed: '', dnf: false })
 
 function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
   const { data, reload } = useData()
@@ -174,7 +174,7 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
   const init = () => {
     const lines: Line[] = heatStanding(existing).map(({ result: r }) => r).map((r) => ({
       driver_id: String(r.driver_id), kart: r.kart_number?.toString() ?? '', best: r.best_lap_time_ms ? formatTime(r.best_lap_time_ms) : '',
-      speed: r.average_speed?.toString() ?? '', dnf: r.dnf,
+      speed: r.average_speed?.toString() ?? '', topSpeed: r.top_average_speed?.toString() ?? '', dnf: r.dnf,
     }))
     while (lines.length < 5) lines.push(blank())
     return lines
@@ -192,7 +192,8 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
     const rows = order.map((p) => ({
       race_id: raceId, heat_id: heat.id, driver_id: Number(p.l.driver_id),
       best_lap_time_ms: p.best,
-      average_speed: p.l.speed ? Number(p.l.speed.replace(',', '.')) : null, kart_number: p.l.kart ? Number(p.l.kart) : null, dnf: p.l.dnf,
+      average_speed: p.l.speed ? Number(p.l.speed.replace(',', '.')) : null,
+      top_average_speed: p.l.topSpeed ? Number(p.l.topSpeed.replace(',', '.')) : null, kart_number: p.l.kart ? Number(p.l.kart) : null, dnf: p.l.dnf,
     }))
     const del = await supabase.from('race_results').delete().eq('heat_id', heat.id)
     if (del.error) return setMsg(del.error.message)
@@ -215,7 +216,7 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
     <div className="card admin-form">
       <div className="section-title"><h3>Heat {heat.heat_number}{heat.name ? ` – ${heat.name}` : ''}</h3><button className="link danger" onClick={() => void removeHeat()}>Delete heat</button></div>
       <div className="result-lines">
-        <div className="result-line head"><span>Driver</span><span>Kart</span><span>Best lap</span><span>Avg km/h</span><span>DNF</span></div>
+        <div className="result-line head"><span>Driver</span><span>Kart</span><span>Best lap</span><span>Avg km/h</span><span>Top avg km/h</span><span>DNF</span></div>
         {lines.map((l, i) => (
           <div className="result-line" key={i}>
             <select value={l.driver_id} onChange={(e) => upd(i, { driver_id: e.target.value })}>
@@ -225,6 +226,7 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
             <input value={l.kart} inputMode="numeric" onChange={(e) => upd(i, { kart: e.target.value })} />
             <input value={l.best} placeholder="41.928" onChange={(e) => upd(i, { best: e.target.value })} />
             <input value={l.speed} inputMode="decimal" onChange={(e) => upd(i, { speed: e.target.value })} />
+            <input value={l.topSpeed} inputMode="decimal" onChange={(e) => upd(i, { topSpeed: e.target.value })} />
             <input type="checkbox" checked={l.dnf} onChange={(e) => upd(i, { dnf: e.target.checked })} />
           </div>
         ))}

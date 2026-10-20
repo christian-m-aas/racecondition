@@ -80,6 +80,7 @@ export function DriverProfile() {
           ['Podiums', s.podiums],
           ['Personal best', formatTime(s.bestMs)],
           ['Avg. race best', formatTime(s.avgOfBestMs ? Math.round(s.avgOfBestMs) : null)],
+          ['Top avg. speed', s.topSpeed != null ? `${s.topSpeed} km/h` : '–'],
           ['Best finish', bestRank ? `P${bestRank}` : '–'],
           ['Crashes', s.crashes],
           ['DNFs', s.dnfs],

@@ -37,6 +37,10 @@ export interface DriverStats {
   history: { race: Race; rank: number | null; bestMs: number | null }[]
   longestPodiumStreak: number
   records: number
+  /** Highest top average speed (km/h) ever recorded by the driver. */
+  topSpeed: number | null
+  /** True for the driver(s) holding the highest top average speed overall. */
+  holdsTopSpeed: boolean
 }
 
 export interface Achievement {
@@ -49,6 +53,7 @@ export interface Achievement {
 
 export const ACHIEVEMENTS: Achievement[] = [
   { id: 'record', icon: '🏆', title: 'Track Record', description: 'Holds the fastest lap ever on a track', earned: (s) => s.records > 0 },
+  { id: 'speed', icon: '⚡', title: 'Speed Demon', description: 'Holds the highest top average speed ever', earned: (s) => s.holdsTopSpeed },
   { id: 'win', icon: '🥇', title: 'First Place', description: 'Won a race', earned: (s) => s.wins > 0 },
   { id: 'podium', icon: '🥉', title: 'Podium Finisher', description: 'Finished on the podium', earned: (s) => s.podiums > 0 },
   { id: 'streak', icon: '🔥', title: 'Hot Streak', description: '3 podiums in a row', earned: (s) => s.longestPodiumStreak >= 3 },
@@ -139,6 +144,16 @@ export function analyse(data: Data): Analysis {
   }
   const records = [...recordMap.values()].sort((a, b) => a.ms - b.ms)
 
+  const topSpeedOf = (id: number) =>
+    data.results.reduce<number | null>(
+      (m, r) => (r.driver_id === id && !r.dnf && r.top_average_speed != null && (m == null || r.top_average_speed > m) ? r.top_average_speed : m),
+      null,
+    )
+  const maxSpeed = data.drivers.reduce<number | null>((m, d) => {
+    const v = topSpeedOf(d.id)
+    return v != null && (m == null || v > m) ? v : m
+  }, null)
+
   const driverStats = new Map<number, DriverStats>()
   for (const driver of data.drivers) {
     const history: DriverStats['history'] = []
@@ -169,6 +184,8 @@ export function analyse(data: Data): Analysis {
       history,
       longestPodiumStreak: longest,
       records: records.filter((r) => r.driverId === driver.id).length,
+      topSpeed: topSpeedOf(driver.id),
+      holdsTopSpeed: maxSpeed != null && topSpeedOf(driver.id) === maxSpeed,
     })
   }
 
@@ -224,6 +241,24 @@ export function generateFacts(data: Data, a: Analysis): string[] {
     facts.push(`${name(rec.driverId)} holds the track record at ${rec.track?.name ?? 'an unknown track'}: ${formatTime(rec.ms)}.`)
   }
 
+  const fastest = top((s) => s.topSpeed ?? 0)
+  if (fastest) facts.push(`${fastest.driver.name} has the highest top average speed ever: ${fastest.topSpeed} km/h.`)
+
+  // Biggest improvement: largest gap between a driver's slowest and fastest race-best lap.
+  let improved: { gap: number; slow: number; fast: number; id: number } | undefined
+  for (const s of stats) {
+    const times = data.results
+      .filter((r) => r.driver_id === s.driver.id && !r.dnf && r.best_lap_time_ms != null)
+      .map((r) => r.best_lap_time_ms!)
+    if (times.length < 2) continue
+    const fast = Math.min(...times)
+    const slow = Math.max(...times)
+    if (!improved || slow - fast > improved.gap) improved = { gap: slow - fast, slow, fast, id: s.driver.id }
+  }
+  if (improved && improved.gap > 0) {
+    facts.push(`${name(improved.id)} has improved the most: ${(improved.gap / 1000).toFixed(3)} s between their slowest (${formatTime(improved.slow)}) and fastest (${formatTime(improved.fast)}) lap.`)
+  }
+
   // Closest finish.
   let closest: { gap: number; info: (typeof a.completed)[number] } | undefined
   for (const info of a.completed) {
@@ -239,7 +274,6 @@ export function generateFacts(data: Data, a: Analysis): string[] {
   const comeback = stats.find((s) => s.history.length >= 2 && s.history.at(-1)!.rank === 1 && (s.history.at(-2)!.rank ?? 0) > 3)
   if (comeback) facts.push(`${comeback.driver.name} went from ${ordinal(comeback.history.at(-2)!.rank!)} to 1st in the last race.`)
 
-  void data
   return facts
 }
 

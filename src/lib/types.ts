@@ -36,6 +36,7 @@ export interface Result {
   best_lap_time_ms: number | null
   dnf: boolean
   average_speed: number | null
+  top_average_speed: number | null
   kart_number: number | null
 }
 
