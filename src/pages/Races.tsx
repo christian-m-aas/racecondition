@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { useData } from '../lib/DataContext'
-import { formatDate, formatTime } from '../lib/format'
+import { formatDate, formatTime, isVideo } from '../lib/format'
 import { heatStanding } from '../lib/stats'
 import { DriverLink, LeaderTable, Loading, Media, RaceCard } from '../components/Shared'
 
@@ -82,7 +82,17 @@ export function RaceDetail() {
           <h2>Photos</h2>
           <div className="gallery">
             {photos.map((p) => (
-              <figure key={p.id}><Media url={p.image_url} caption={p.caption} />{p.caption && <figcaption>{p.caption}</figcaption>}</figure>
+              <figure key={p.id}>
+                {isVideo(p.image_url) ? (
+                  <>
+                    <Media url={p.image_url} caption={p.caption} />
+                    <figcaption><Link to={`/gallery?photo=${p.id}`}>Open in gallery</Link></figcaption>
+                  </>
+                ) : (
+                  <Link to={`/gallery?photo=${p.id}`}><Media url={p.image_url} caption={p.caption} /></Link>
+                )}
+                {p.caption && <figcaption>{p.caption}</figcaption>}
+              </figure>
             ))}
           </div>
         </section>
