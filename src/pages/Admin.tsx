@@ -59,8 +59,10 @@ function Login() {
 }
 
 /** Generic create / edit / delete for one table. */
-function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, groupBy }: {
+function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, groupBy, multiUpload }: {
   table: string
+  /** Lets "Add new" pick several files at once and creates one row per file. */
+  multiUpload?: boolean
   fields: Field[]
   rows: object[]
   columns: (row: Row) => string[]
@@ -74,9 +76,34 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, group
   const [editing, setEditing] = useState<number | null>(null)
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
+  const [files, setFiles] = useState<File[]>([])
+  /** Bumped to clear the multi-file input after a successful upload. */
+  const [round, setRound] = useState(0)
+  const multi = !!multiUpload && editing == null
 
   const set = (key: string, value: unknown) => setForm((f) => ({ ...f, [key]: value }))
-  const reset = () => { setForm(defaults); setEditing(null) }
+  const reset = () => { setForm(defaults); setEditing(null); setFiles([]); setRound((n) => n + 1) }
+
+  async function submitMany(payload: Row) {
+    setBusy(true)
+    let done = 0
+    try {
+      // Sequential so the items are added in the order they were selected.
+      for (const file of files) {
+        setMsg(`Uploading ${done + 1} of ${files.length}…`)
+        const image_url = await uploadImage(file, table)
+        const { error } = await supabase.from(table).insert({ ...payload, image_url })
+        if (error) throw error
+        done++
+      }
+      setMsg(`Added ${done} item${done === 1 ? '' : 's'} ✓`)
+      reset()
+    } catch (err) {
+      setMsg(`${(err as Error).message} (${done} of ${files.length} added)`)
+    }
+    setBusy(false)
+    await reload()
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -87,6 +114,7 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, group
       else if (v === '' || v == null) payload[f.key] = null
       else payload[f.key] = f.type === 'number' || f.type === 'select' ? Number(v) : v
     }
+    if (multi) return submitMany(payload)
     const q = editing == null ? supabase.from(table).insert(payload) : supabase.from(table).update(payload).eq('id', editing)
     const { error } = await q
     setMsg(error ? error.message : 'Saved ✓')
@@ -124,6 +152,8 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, group
                 <input type="checkbox" checked={!!form[f.key]} onChange={(e) => set(f.key, e.target.checked)} />
               ) : f.type === 'textarea' ? (
                 <textarea value={String(form[f.key] ?? '')} onChange={(e) => set(f.key, e.target.value)} />
+              ) : f.type === 'image' && multi ? (
+                <input key={round} type="file" multiple accept="image/*,video/*,.mov" onChange={(e) => setFiles([...(e.target.files ?? [])])} required />
               ) : f.type === 'image' ? (
                 <>
                   <input type="text" placeholder="URL or upload below" value={String(form[f.key] ?? '')} onChange={(e) => set(f.key, e.target.value)} required={f.required} />
@@ -136,7 +166,7 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, group
           ))}
         </div>
         <div className="row">
-          <button className="btn primary" disabled={busy}>{busy ? 'Uploading…' : editing == null ? 'Add' : 'Save'}</button>
+          <button className="btn primary" disabled={busy}>{busy ? 'Uploading…' : editing != null ? 'Save' : multi && files.length > 1 ? `Add ${files.length}` : 'Add'}</button>
           {editing != null && <button type="button" className="btn" onClick={reset}>Cancel</button>}
           <span className="muted">{msg}</span>
         </div>
@@ -266,7 +296,6 @@ function Results() {
           {races.map((r) => <option key={r.id} value={r.id}>{r.name} ({r.race_date})</option>)}
         </select>
       </label>
-      <p className="muted">Group 1 drives heats 1 and 3, group 2 drives heats 2 and 4. Enter times like 41.928 or 1:02.345.</p>
       <div className="row">
         <button className="btn" onClick={() => void addAllHeats()}>Create heats 1–4</button>
         <button className="btn" onClick={() => void addHeat()}>+ Heat</button>
@@ -437,8 +466,7 @@ function Dashboard({ email }: { email: string | undefined }) {
       {tab === 'Crashes' && <CrashEditor />}
       {tab === 'Gallery' && (
         <>
-        <p className="muted">Use the arrows to change the order within a race. New items are added at the end.</p>
-        <Crud table="race_photos" rows={[...data.photos].sort((a, b) => a.race_id - b.race_id)} thumb={(r) => String(r.image_url)}
+        <Crud table="race_photos" multiUpload rows={[...data.photos].sort((a, b) => a.race_id - b.race_id)} thumb={(r) => String(r.image_url)}
           extra={(r) => <><button className="btn small" onClick={() => void movePhoto(data.photos, r.id as number, -1, reload)}>↑</button> <button className="btn small" onClick={() => void movePhoto(data.photos, r.id as number, 1, reload)}>↓</button></>}
           groupBy={(r) => raceName(r.race_id)} columns={(r) => [String(r.caption || "")]}
           fields={[
