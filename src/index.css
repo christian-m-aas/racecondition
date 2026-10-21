@@ -138,12 +138,18 @@ label.check { grid-auto-flow: column; justify-content: start; align-items: cente
 .trackmap { min-height: 320px; display: grid; place-items: center; }
 .map-wrap { position: relative; width: 100%; } .map-wrap img { width: 100%; display: block; }
 .map-clip { position: relative; width: 100%; overflow: hidden; }
+.map-rot { display: contents; }
 .zoom-reset { display: none; }
-/* Mobile: zoom in on the selected crash. Pins are counter-scaled to keep their size. */
+/* Mobile: pinch/drag the rotated map. Pins are counter-rotated and scaled by --inv.
+   Page scroll stays available until the map is zoomed in. */
 @media (max-width: 640px) {
-  .map-wrap { transition: transform .35s ease; transform-origin: var(--ox, 50%) var(--oy, 50%); }
-  .map-clip.zoomed .map-wrap { transform: scale(2.5); }
-  .map-clip.zoomed .pin { transform: translate(-50%, -50%) scale(.4); }
+  .map-clip { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  .map-clip.zoomed { touch-action: none; }
+  .map-wrap { transform-origin: 0 0; will-change: transform; }
+  .map-wrap.smooth { transition: transform .35s ease; }
+  .map-rot { display: block; position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+  .map-rot img { width: auto; max-width: none; }
+  .map-clip .pin { transform: translate(-50%, -50%) rotate(-90deg) scale(var(--inv, 1)); }
   .zoom-reset { display: block; position: absolute; top: 8px; right: 8px; padding: 6px 12px; z-index: 3; }
 }
 .map-placeholder { color: var(--muted); font: italic 700 28px 'Barlow Condensed', sans-serif; text-transform: uppercase; }
