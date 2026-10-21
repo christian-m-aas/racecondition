@@ -134,8 +134,18 @@ label.check { grid-auto-flow: column; justify-content: start; align-items: cente
 .gallery img, .gallery video { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; background: #000; } .gallery figcaption { padding: 10px 12px; font-size: 13px; color: var(--muted); }
 .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.9); display: grid; place-content: center; justify-items: center; gap: 12px; padding: 20px; z-index: 50; cursor: zoom-out; }
 .lightbox img { max-width: 95vw; max-height: 80vh; border-radius: 8px; } .lightbox p { margin: 0; }
+.grid.track-grid { grid-template-columns: 1fr; }
 .trackmap { min-height: 320px; display: grid; place-items: center; }
 .map-wrap { position: relative; width: 100%; } .map-wrap img { width: 100%; display: block; }
+.map-clip { position: relative; width: 100%; overflow: hidden; }
+.zoom-reset { display: none; }
+/* Mobile: zoom in on the selected crash. Pins are counter-scaled to keep their size. */
+@media (max-width: 640px) {
+  .map-wrap { transition: transform .35s ease; transform-origin: var(--ox, 50%) var(--oy, 50%); }
+  .map-clip.zoomed .map-wrap { transform: scale(2.5); }
+  .map-clip.zoomed .pin { transform: translate(-50%, -50%) scale(.4); }
+  .zoom-reset { display: block; position: absolute; top: 8px; right: 8px; padding: 6px 12px; z-index: 3; }
+}
 .map-placeholder { color: var(--muted); font: italic 700 28px 'Barlow Condensed', sans-serif; text-transform: uppercase; }
 
 .order-list li { display: flex; align-items: center; gap: 10px; }
