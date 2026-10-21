@@ -27,12 +27,15 @@ export default function Track() {
         <div className="grid two track-grid">
           <div className="card trackmap">
             {track.svg_url ? (
-              <div className="map-wrap">
+              <div className={`map-clip ${selected ? "zoomed" : ""}`}>
+              <div className="map-wrap" style={selected ? ({ "--ox": `${selected.x}%`, "--oy": `${selected.y}%` } as React.CSSProperties) : undefined}>
                 <img src={track.svg_url} alt={`Map of ${track.name}`} />
                 {/* Crash pins use x/y as percentages (0–100) of the map. */}
                 {crashes.map((c) => (
                   <CrashPin key={c.id} driver={data.drivers.find((d) => d.id === c.driver_id)} x={c.x} y={c.y} active={c.id === crashId} onClick={() => setCrashId(c.id)} />
                 ))}
+              </div>
+              {selected && <button type="button" className="btn zoom-reset" onClick={() => setCrashId(null)}>Zoom out</button>}
               </div>
             ) : (
               <div className="map-placeholder">Track map coming soon 🏎️</div>
@@ -40,7 +43,6 @@ export default function Track() {
           </div>
           <div>
             <h2>{track.name}</h2>
-            {track.location && <p className="muted">{track.location}</p>}
             {record && <p>Track record: <strong className="mono">{formatTime(record.ms)}</strong> – {data.drivers.find((d) => d.id === record.driverId)?.name}</p>}
             <h3>Crashes ({crashes.length})</h3>
             {selected && (
