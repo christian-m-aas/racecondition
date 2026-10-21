@@ -6,6 +6,7 @@ import { useData } from '../lib/DataContext'
 import { Avatar, CrashPin } from '../components/Shared'
 import { formatTime, isVideo, parseTime } from '../lib/format'
 import { heatStanding } from '../lib/stats'
+import { scanSheet } from '../lib/scan'
 import type { Heat, Photo } from '../lib/types'
 
 type Row = Record<string, unknown>
@@ -197,6 +198,7 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, group
 
 interface Line { driver_id: string; kart: string; best: string; speed: string; topSpeed: string; dnf: boolean }
 const blank = (): Line => ({ driver_id: '', kart: '', best: '', speed: '', topSpeed: '', dnf: false })
+const isBlank = (l: Line) => !l.driver_id && !l.kart && !l.best && !l.speed && !l.topSpeed && !l.dnf
 
 function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
   const { data, reload } = useData()
@@ -211,7 +213,38 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
   }
   const [lines, setLines] = useState<Line[]>(init)
   const [msg, setMsg] = useState('')
+  const [scanning, setScanning] = useState(false)
   const upd = (i: number, patch: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)))
+
+  /** Reads timing sheet photos in the browser (nothing is uploaded) and adds one row per sheet. The driver is not on the sheet. */
+  async function scan(files: File[]) {
+    setScanning(true)
+    const karts = new Set(lines.map((l) => l.kart).filter(Boolean))
+    const problems: string[] = []
+    let done = 0
+    let read = 0
+    for (const file of files) {
+      setMsg(files.length > 1 ? `Reading sheet ${done + 1} of ${files.length}…` : 'Reading sheet…')
+      const name = files.length > 1 ? `${file.name}: ` : ''
+      try {
+        const s = await scanSheet(file)
+        read++
+        const line: Line = { ...blank(), kart: s.kart?.toString() ?? '', best: s.best ? formatTime(s.best) : '', speed: s.speed?.toString() ?? '', topSpeed: s.topSpeed?.toString() ?? '' }
+        setLines((ls) => { const i = ls.findIndex(isBlank); return i < 0 ? [...ls, line] : ls.map((l, j) => (j === i ? line : l)) })
+        const missing = ([['kart', s.kart], ['best lap', s.best], ['avg speed', s.speed], ['top speed', s.topSpeed]] as const).filter(([, v]) => v == null).map(([label]) => label)
+        if (missing.length) problems.push(`${name}could not read ${missing.join(', ')}`)
+        if (line.kart && karts.has(line.kart)) problems.push(`${name}kart ${line.kart} is already in this heat`)
+        karts.add(line.kart)
+        problems.push(...s.warnings.map((w) => name + w))
+      } catch (err) {
+        problems.push(name + (err as Error).message.replace(/\.$/, ''))
+      }
+      done++
+    }
+    const summary = read ? `${read} sheet${read === 1 ? '' : 's'} read – choose the driver and check the values.` : 'No sheets read.'
+    setMsg(problems.length ? `${summary} ${problems.join('; ')}.` : summary)
+    setScanning(false)
+  }
 
   async function save() {
     const filled = lines.filter((l) => l.driver_id)
@@ -263,6 +296,10 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
       </div>
       <div className="row">
         <button className="btn" onClick={() => setLines((ls) => [...ls, blank()])}>+ Row</button>
+        <label className="btn">
+          {scanning ? 'Reading…' : 'Scan sheet'}
+          <input type="file" accept="image/*" multiple hidden disabled={scanning} onChange={(e) => { const files = [...(e.target.files ?? [])]; e.target.value = ''; if (files.length) void scan(files) }} />
+        </label>
         <button className="btn primary" onClick={() => void save()}>Save heat</button>
         <span className="muted">{msg}</span>
       </div>
