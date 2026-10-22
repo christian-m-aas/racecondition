@@ -484,10 +484,9 @@ function Dashboard({ email }: { email: string | undefined }) {
           ]} />
       )}
       {tab === 'Drivers' && (
-        <Crud table="drivers" rows={data.drivers} defaults={{ is_active: true }} columns={(r) => [String(r.name), String(r.nickname ?? ''), r.is_active ? 'Active' : 'Inactive']}
+        <Crud table="drivers" rows={data.drivers} defaults={{ is_active: true }} columns={(r) => [String(r.name), r.is_active ? 'Active' : 'Inactive']}
           fields={[
             { key: 'name', label: 'Name', type: 'text', required: true },
-            { key: 'nickname', label: 'Nickname', type: 'text' },
             { key: 'photo_url', label: 'Profile photo', type: 'image' },
             { key: 'is_active', label: 'Active', type: 'checkbox' },
           ]} />
