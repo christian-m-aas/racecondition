@@ -20,7 +20,7 @@ export function DriverLink({ driver, size }: { driver: Driver | undefined; size?
   return (
     <Link to={`/drivers/${driver.id}`} className="driver-link">
       <Avatar driver={driver} size={size} />
-      <span>{driver.name}{driver.nickname ? <em> “{driver.nickname}”</em> : null}</span>
+      <span>{driver.name}</span>
     </Link>
   )
 }

@@ -10,7 +10,7 @@ export function Drivers() {
   const normalise = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const q = normalise(query.trim())
   const sorted = [...data.drivers]
-    .filter((d) => !q || normalise(`${d.name} ${d.nickname ?? ''}`).includes(q))
+    .filter((d) => !q || normalise(d.name).includes(q))
     .sort((x, y) => {
     const sx = a.driverStats.get(x.id)!, sy = a.driverStats.get(y.id)!
     return (sy.wins - sx.wins) || (sy.podiums - sx.podiums) || (sy.races - sx.races) || x.name.localeCompare(y.name)
@@ -37,7 +37,6 @@ export function Drivers() {
             <Link key={d.id} to={`/drivers/${d.id}`} className="card driver-card">
               <Avatar driver={d} size={96} />
               <h3>{d.name}</h3>
-              {d.nickname && <div className="muted">“{d.nickname}”</div>}
               <dl className="stat-row">
                 <div><dt>Races</dt><dd>{s.races}</dd></div>
                 <div><dt>Wins</dt><dd>{s.wins}</dd></div>
@@ -69,7 +68,6 @@ export function DriverProfile() {
         <div>
           <div className="eyebrow accent">{d.is_active ? 'Active driver' : 'Retired'}</div>
           <h1 className="page-title">{d.name}</h1>
-          {d.nickname && <p className="muted">“{d.nickname}”</p>}
         </div>
       </div>
 

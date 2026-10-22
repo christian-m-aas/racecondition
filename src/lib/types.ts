@@ -1,7 +1,6 @@
 export interface Driver {
   id: number
   name: string
-  nickname: string | null
   photo_url: string | null
   is_active: boolean
 }
