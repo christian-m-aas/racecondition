@@ -217,6 +217,11 @@ function HeatEditor({ raceId, heat, canUp, canDown, moving, onMove }: HeatEditor
   const [msg, setMsg] = useState('')
   const [scanning, setScanning] = useState(false)
   const upd = (i: number, patch: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)))
+  /** Takes a row out of the form. It only counts once the heat is saved, since saving replaces all results. */
+  function removeLine(i: number) {
+    if (!isBlank(lines[i])) setMsg('Row removed – click Save heat to apply.')
+    setLines((ls) => ls.filter((_, j) => j !== i))
+  }
 
   /** Reads timing sheet photos in the browser (nothing is uploaded) and adds one row per sheet. The driver is not on the sheet. */
   async function scan(files: File[]) {
@@ -288,7 +293,7 @@ function HeatEditor({ raceId, heat, canUp, canDown, moving, onMove }: HeatEditor
         </span>
       </div>
       <div className="result-lines">
-        <div className="result-line head"><span>Driver</span><span>Kart</span><span>Best lap</span><span>Avg km/h</span><span>Top avg km/h</span><span>DNF</span></div>
+        <div className="result-line head"><span>Driver</span><span>Kart</span><span>Best lap</span><span>Avg km/h</span><span>Top avg km/h</span><span>DNF</span><span /></div>
         {lines.map((l, i) => (
           <div className="result-line" key={i}>
             <select value={l.driver_id} onChange={(e) => upd(i, { driver_id: e.target.value })}>
@@ -300,6 +305,7 @@ function HeatEditor({ raceId, heat, canUp, canDown, moving, onMove }: HeatEditor
             <input value={l.speed} inputMode="decimal" onChange={(e) => upd(i, { speed: e.target.value })} />
             <input value={l.topSpeed} inputMode="decimal" onChange={(e) => upd(i, { topSpeed: e.target.value })} />
             <input type="checkbox" checked={l.dnf} onChange={(e) => upd(i, { dnf: e.target.checked })} />
+            <button className="remove" title="Remove row" aria-label={`Remove row ${i + 1}`} onClick={() => removeLine(i)}>×</button>
           </div>
         ))}
       </div>
