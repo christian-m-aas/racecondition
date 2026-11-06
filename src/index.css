@@ -84,6 +84,7 @@ nav a.active { border-color: var(--accent); }
 .btn:hover { border-color: var(--yellow); color: var(--text); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #111; }
 .btn.small { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.35; cursor: default; } .btn:disabled:hover { border-color: var(--line); }
 button.link { background: none; border: 0; color: var(--yellow); cursor: pointer; font: inherit; padding: 0; } button.link.danger { color: #ff6b6b; }
 input, select, textarea { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; color: var(--text); padding: 8px 10px; font: inherit; width: 100%; }
 select { width: auto; max-width: 100%; }

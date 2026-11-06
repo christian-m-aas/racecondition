@@ -200,7 +200,9 @@ interface Line { driver_id: string; kart: string; best: string; speed: string; t
 const blank = (): Line => ({ driver_id: '', kart: '', best: '', speed: '', topSpeed: '', dnf: false })
 const isBlank = (l: Line) => !l.driver_id && !l.kart && !l.best && !l.speed && !l.topSpeed && !l.dnf
 
-function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
+interface HeatEditorProps { raceId: number; heat: Heat; canUp: boolean; canDown: boolean; moving: boolean; onMove: (dir: -1 | 1) => void }
+
+function HeatEditor({ raceId, heat, canUp, canDown, moving, onMove }: HeatEditorProps) {
   const { data, reload } = useData()
   const existing = data.results.filter((r) => r.heat_id === heat.id)
   const init = () => {
@@ -277,7 +279,14 @@ function HeatEditor({ raceId, heat }: { raceId: number; heat: Heat }) {
 
   return (
     <div className="card admin-form">
-      <div className="section-title"><h3>Heat {heat.heat_number}{heat.name ? ` – ${heat.name}` : ''}</h3><button className="link danger" onClick={() => void removeHeat()}>Delete heat</button></div>
+      <div className="section-title">
+        <h3>Heat {heat.heat_number}{heat.name ? ` – ${heat.name}` : ''}</h3>
+        <span className="row" style={{ margin: 0 }}>
+          <button className="btn small" disabled={!canUp || moving} title="Move heat up" aria-label={`Move heat ${heat.heat_number} up`} onClick={() => onMove(-1)}>↑</button>
+          <button className="btn small" disabled={!canDown || moving} title="Move heat down" aria-label={`Move heat ${heat.heat_number} down`} onClick={() => onMove(1)}>↓</button>
+          <button className="link danger" onClick={() => void removeHeat()}>Delete heat</button>
+        </span>
+      </div>
       <div className="result-lines">
         <div className="result-line head"><span>Driver</span><span>Kart</span><span>Best lap</span><span>Avg km/h</span><span>Top avg km/h</span><span>DNF</span></div>
         {lines.map((l, i) => (
@@ -313,6 +322,31 @@ function Results() {
   const [raceId, setRaceId] = useState<number | ''>('')
   const current = raceId || races[0]?.id
   const heats = data.heats.filter((h) => h.race_id === current).sort((a, b) => a.heat_number - b.heat_number)
+  const [moving, setMoving] = useState(false)
+
+  /** Swaps the numbers of two neighbouring heats, so their results move with them. */
+  async function moveHeat(id: number, dir: -1 | 1) {
+    const a = heats.find((h) => h.id === id)
+    const b = heats[heats.findIndex((h) => h.id === id) + dir]
+    if (!a || !b || moving) return
+    setMoving(true)
+    const setNumber = (hid: number, n: number) => supabase.from('heats').update({ heat_number: n }).eq('id', hid).select('id')
+    // heat_number may be unique per race, so park one heat on a free number while swapping
+    const park = Math.max(...heats.map((h) => h.heat_number)) + 1
+    const steps: [number, number][] = [[a.id, park], [b.id, a.heat_number], [a.id, b.heat_number]]
+    let failure = ''
+    for (const [hid, n] of steps) {
+      const { data: rows, error } = await setNumber(hid, n)
+      if (error || !rows?.length) { failure = error?.message ?? 'The database did not allow updating heats (check the update policy on "heats").'; break }
+    }
+    if (failure) {
+      await setNumber(b.id, b.heat_number)
+      await setNumber(a.id, a.heat_number)
+      alert(`Could not change heat order: ${failure}`)
+    }
+    await reload()
+    setMoving(false)
+  }
 
   async function addHeat() {
     const n = (heats.at(-1)?.heat_number ?? 0) + 1
@@ -337,7 +371,10 @@ function Results() {
         <button className="btn" onClick={() => void addAllHeats()}>Create heats 1–4</button>
         <button className="btn" onClick={() => void addHeat()}>+ Heat</button>
       </div>
-      {heats.map((h) => <HeatEditor key={`${h.id}-${data.results.filter((r) => r.heat_id === h.id).length}`} raceId={current!} heat={h} />)}
+      {heats.map((h, i) => (
+        <HeatEditor key={`${h.id}-${data.results.filter((r) => r.heat_id === h.id).length}`} raceId={current!} heat={h}
+          canUp={i > 0} canDown={i < heats.length - 1} moving={moving} onMove={(dir) => void moveHeat(h.id, dir)} />
+      ))}
     </div>
   )
 }
