@@ -49,8 +49,9 @@ export async function scanSheet(file: File): Promise<SheetScan> {
   const image = await toJpeg(file)
   const { data, error } = await supabase.functions.invoke<Reading & { error?: string }>('scan-sheet', {
     body: { image, mimeType: 'image/jpeg' },
-    // Without a limit a hung request leaves the admin on "Reading sheet…" forever.
-    timeout: 60_000,
+    // Without a limit a hung request leaves the admin on "Reading sheet…" forever. The function itself
+    // gives up on Gemini after 110 s (retries included), so this only catches a function that hangs.
+    timeout: 130_000,
   })
   if (error) {
     // Our function answers { error }; anything else (e.g. Supabase cutting it off) is shown as status + text.
