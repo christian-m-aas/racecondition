@@ -33,9 +33,9 @@ Deno.serve(async (req) => {
   const { image, mimeType } = await req.json()
   if (!image) return json({ error: 'no image' }, 400)
 
-  // GEMINI_MODEL may list several models, e.g. "gemini-3.8-flash,gemini-3.8-flash-lite": when one is
-  // overloaded the next is tried. Busy/overloaded answers are retried, all within Supabase's time limit.
-  const models = (Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.8-flash').split(',').map((m) => m.trim()).filter(Boolean)
+  // GEMINI_MODEL lists the models to try in order, comma separated. Reading a few numbers is easy,
+  // so a light, fast model goes first and a bigger one is the fallback.
+  const models = (Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.8-flash-lite,gemini-3.8-flash').split(',').map((m) => m.trim()).filter(Boolean)
   const body = JSON.stringify({
     contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: mimeType ?? 'image/jpeg', data: image } }] }],
     generationConfig: {
@@ -55,19 +55,20 @@ Deno.serve(async (req) => {
       },
     },
   })
-  // Each model gets up to 3 tries when Gemini says it is busy (429/500/503). A model that does not
-  // answer in time, or does not exist (404), is not retried: the next model is tried straight away.
+  // A model that says it is busy (429/500/503) gets one more try. Anything else (no answer within
+  // 15 s, unknown model, a setting the model does not support) moves straight on to the next model.
+  // The last error is shown if none of them answer.
   const deadline = Date.now() + 110_000
   let res: Response | null = null
   let lastError = 'Gemini did not answer'
   tryModels: for (const model of models) {
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 2; attempt++) {
       if (attempt > 0) await new Promise((r) => setTimeout(r, 2_000 * attempt))
       const left = deadline - Date.now()
       if (left < 5_000) break tryModels
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
-        signal: AbortSignal.timeout(Math.min(30_000, left)),
+        signal: AbortSignal.timeout(Math.min(15_000, left)),
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': Deno.env.get('GEMINI_API_KEY')! },
         body,
       }).catch((err) => err as Error)
@@ -77,9 +78,7 @@ Deno.serve(async (req) => {
       }
       if (r.ok) { res = r; break tryModels }
       lastError = `Gemini ${r.status} (${model}): ${await r.text()}`
-      if (r.status === 404) continue tryModels
-      // Anything else (bad key, bad request) will not get better by trying again.
-      if (![429, 500, 503].includes(r.status)) return json({ error: lastError }, 502)
+      if (![429, 500, 503].includes(r.status)) continue tryModels
     }
   }
   if (!res) return json({ error: lastError }, 503)
