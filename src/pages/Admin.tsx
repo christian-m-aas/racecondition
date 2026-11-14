@@ -223,7 +223,7 @@ function HeatEditor({ raceId, heat, canUp, canDown, moving, onMove }: HeatEditor
     setLines((ls) => ls.filter((_, j) => j !== i))
   }
 
-  /** Reads timing sheet photos in the browser (nothing is uploaded) and adds one row per sheet. The driver is not on the sheet. */
+  /** Reads timing sheet photos (sent to the scan-sheet edge function, which uses Gemini) and adds one row per sheet. The driver is not on the sheet. */
   async function scan(files: File[]) {
     setScanning(true)
     const karts = new Set(lines.map((l) => l.kart).filter(Boolean))
