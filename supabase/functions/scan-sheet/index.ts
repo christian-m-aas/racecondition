@@ -55,32 +55,32 @@ Deno.serve(async (req) => {
       },
     },
   })
+  // Each model gets up to 3 tries when Gemini says it is busy (429/500/503). A model that does not
+  // answer in time, or does not exist (404), is not retried: the next model is tried straight away.
   const deadline = Date.now() + 110_000
-  const attempts = models.flatMap((m) => [m, m, m])
   let res: Response | null = null
   let lastError = 'Gemini did not answer'
-  const skip = new Set<string>()
-  for (const [i, model] of attempts.entries()) {
-    if (skip.has(model)) continue
-    const left = deadline - Date.now()
-    if (left < 5_000) break
-    if (i > 0 && attempts[i - 1] === model) await new Promise((r) => setTimeout(r, 2_000 * (i % 3)))
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: 'POST',
-      signal: AbortSignal.timeout(Math.min(45_000, left)),
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': Deno.env.get('GEMINI_API_KEY')! },
-      body,
-    }).catch((err) => err as Error)
-    if (r instanceof Error) {
-      lastError = r.name === 'TimeoutError' ? `${model} did not answer in time` : `could not reach Gemini: ${r.message}`
-      continue
+  tryModels: for (const model of models) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 2_000 * attempt))
+      const left = deadline - Date.now()
+      if (left < 5_000) break tryModels
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        signal: AbortSignal.timeout(Math.min(30_000, left)),
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': Deno.env.get('GEMINI_API_KEY')! },
+        body,
+      }).catch((err) => err as Error)
+      if (r instanceof Error) {
+        lastError = r.name === 'TimeoutError' ? `${model} did not answer in time` : `could not reach Gemini: ${r.message}`
+        continue tryModels
+      }
+      if (r.ok) { res = r; break tryModels }
+      lastError = `Gemini ${r.status} (${model}): ${await r.text()}`
+      if (r.status === 404) continue tryModels
+      // Anything else (bad key, bad request) will not get better by trying again.
+      if (![429, 500, 503].includes(r.status)) return json({ error: lastError }, 502)
     }
-    if (r.ok) { res = r; break }
-    lastError = `Gemini ${r.status} (${model}): ${await r.text()}`
-    // Busy or overloaded: try again. An unknown model: go on to the next one.
-    // Anything else (bad key, bad request) will not get better.
-    if (r.status === 404) { skip.add(model); continue }
-    if (![429, 500, 503].includes(r.status)) return json({ error: lastError }, 502)
   }
   if (!res) return json({ error: lastError }, 503)
 
