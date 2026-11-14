@@ -34,13 +34,17 @@ Deno.serve(async (req) => {
   if (!image) return json({ error: 'no image' }, 400)
 
   const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.8-flash'
+  // Gemini sometimes hangs; answer with a clear error before Supabase cuts the function off.
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST',
+    signal: AbortSignal.timeout(45_000),
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': Deno.env.get('GEMINI_API_KEY')! },
     body: JSON.stringify({
       contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: mimeType ?? 'image/jpeg', data: image } }] }],
       generationConfig: {
-        temperature: 0,
+        // Gemini 3 models should keep the default temperature (lower values can make them loop),
+        // and reading a few numbers needs little thinking, which keeps it fast.
+        thinkingConfig: { thinkingLevel: 'low' },
         responseMimeType: 'application/json',
         responseSchema: {
           type: 'OBJECT',
@@ -54,7 +58,10 @@ Deno.serve(async (req) => {
         },
       },
     }),
-  })
+  }).catch((err) => err as Error)
+  if (res instanceof Error) {
+    return json({ error: res.name === 'TimeoutError' ? 'Gemini did not answer within 45 seconds' : `could not reach Gemini: ${res.message}` }, 504)
+  }
   if (!res.ok) return json({ error: `Gemini ${res.status}: ${await res.text()}` }, 502)
 
   const out = await res.json()
