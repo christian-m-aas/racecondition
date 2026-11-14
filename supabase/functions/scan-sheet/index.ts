@@ -11,7 +11,7 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 
 const PROMPT = `This is a photo of a go-kart lap timing sheet for one driver. Read:
-- kart: the kart number (e.g. "Driver: Kart 7" or "Kart No 7")
+- kart: the number after "DRIVER: Kart" (e.g. 8 for "DRIVER: Kart 8"). Ignore "Kart No", which is a different number.
 - best: the best lap time exactly as printed, e.g. "0:18.830"
 - speed: the "Average speed" in km/h
 - topSpeed: the "Top average speed" in km/h
