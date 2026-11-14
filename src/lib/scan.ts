@@ -49,6 +49,8 @@ export async function scanSheet(file: File): Promise<SheetScan> {
   const image = await toJpeg(file)
   const { data, error } = await supabase.functions.invoke<Reading & { error?: string }>('scan-sheet', {
     body: { image, mimeType: 'image/jpeg' },
+    // Without a limit a hung request leaves the admin on "Reading sheet…" forever.
+    timeout: 60_000,
   })
   if (error) {
     const body = error instanceof FunctionsHttpError ? await error.context.json().catch(() => null) : null
