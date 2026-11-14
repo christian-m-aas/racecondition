@@ -199,6 +199,8 @@ function Crud({ table, fields, rows, columns, defaults = {}, thumb, extra, group
 interface Line { driver_id: string; kart: string; best: string; speed: string; topSpeed: string; dnf: boolean }
 const blank = (): Line => ({ driver_id: '', kart: '', best: '', speed: '', topSpeed: '', dnf: false })
 const isBlank = (l: Line) => !l.driver_id && !l.kart && !l.best && !l.speed && !l.topSpeed && !l.dnf
+/** No sheet values yet (a driver may already be chosen): where the next scanned sheet goes. */
+const noSheet = (l: Line) => !l.kart && !l.best && !l.speed && !l.topSpeed && !l.dnf
 
 interface HeatEditorProps { raceId: number; heat: Heat; canUp: boolean; canDown: boolean; moving: boolean; onMove: (dir: -1 | 1) => void }
 
@@ -236,8 +238,10 @@ function HeatEditor({ raceId, heat, canUp, canDown, moving, onMove }: HeatEditor
       try {
         const s = await scanSheet(file)
         read++
-        const line: Line = { ...blank(), kart: s.kart?.toString() ?? '', best: s.best ? formatTime(s.best) : '', speed: s.speed?.toString() ?? '', topSpeed: s.topSpeed?.toString() ?? '' }
-        setLines((ls) => { const i = ls.findIndex(isBlank); return i < 0 ? [...ls, line] : ls.map((l, j) => (j === i ? line : l)) })
+        const sheet = { kart: s.kart?.toString() ?? '', best: s.best ? formatTime(s.best) : '', speed: s.speed?.toString() ?? '', topSpeed: s.topSpeed?.toString() ?? '' }
+        const line: Line = { ...blank(), ...sheet }
+        // The first row without sheet values gets them, keeping a driver chosen before scanning.
+        setLines((ls) => { const i = ls.findIndex(noSheet); return i < 0 ? [...ls, line] : ls.map((l, j) => (j === i ? { ...l, ...sheet } : l)) })
         const missing = ([['kart', s.kart], ['best lap', s.best], ['avg speed', s.speed], ['top speed', s.topSpeed]] as const).filter(([, v]) => v == null).map(([label]) => label)
         if (missing.length) problems.push(`${name}could not read ${missing.join(', ')}`)
         if (line.kart && karts.has(line.kart)) problems.push(`${name}kart ${line.kart} is already in this heat`)
