@@ -53,8 +53,16 @@ export async function scanSheet(file: File): Promise<SheetScan> {
     timeout: 60_000,
   })
   if (error) {
-    const body = error instanceof FunctionsHttpError ? await error.context.json().catch(() => null) : null
-    throw new Error(`could not read the sheet (${body?.error ?? error.message})`)
+    // Our function answers { error }; anything else (e.g. Supabase cutting it off) is shown as status + text.
+    let detail = error.message
+    if (error instanceof FunctionsHttpError) {
+      const res = error.context as Response
+      const text = await res.text().catch(() => '')
+      let parsed: { error?: string } | null = null
+      try { parsed = JSON.parse(text) } catch { /* not JSON */ }
+      detail = parsed?.error ?? `${res.status}${text ? `: ${text.slice(0, 200)}` : ''}`
+    }
+    throw new Error(`could not read the sheet (${detail})`)
   }
   if (!data || data.error) throw new Error(`could not read the sheet (${data?.error ?? 'no answer'})`)
 
